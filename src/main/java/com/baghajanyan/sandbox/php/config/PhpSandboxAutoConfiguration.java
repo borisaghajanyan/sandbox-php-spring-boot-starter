@@ -1,5 +1,7 @@
 package com.baghajanyan.sandbox.php.config;
 
+import java.util.concurrent.Semaphore;
+
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +14,7 @@ public class PhpSandboxAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public CodeExecutor phpCodeExecutor() {
-        return new PhpCodeExecutor();
+    public CodeExecutor phpCodeExecutor(PhpSandboxProperties properties) {
+        return new PhpCodeExecutor(new Semaphore(properties.getMaxConcurrency()));
     }
 }

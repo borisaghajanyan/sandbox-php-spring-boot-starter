@@ -12,7 +12,11 @@ import com.baghajanyan.sandbox.core.model.CodeSnippet;
 
 public class PhpCodeExecutor implements CodeExecutor {
 
-    private final Semaphore semaphore = new Semaphore(5);
+    private final Semaphore semaphore;
+
+    public PhpCodeExecutor(Semaphore semaphore) {
+        this.semaphore = semaphore;
+    }
 
     public ExecutionResult execute(CodeSnippet snippet) {
         try {
