@@ -88,3 +88,32 @@ In this example:
 1.  The `CodeExecutor` bean is injected into the `PhpExecutionService`.
 2.  The `executePhpCode` method takes a string of PHP code, creates a `CodeSnippet` object, and passes it to the `execute` method of the `CodeExecutor`.
 3.  The `execute` method returns an `ExecutionResult` object, which contains the exit code, standard output, and standard error of the execution.
+
+### Code Examples
+
+The `code` parameter in the `executePhpCode` method can be any valid PHP code snippet. The library will automatically wrap the code in `<?php ... ?>` tags if they are not already present.
+
+Here are a few examples of valid code snippets:
+
+**A simple "Hello World"**
+
+```php
+echo 'Hello, World!';
+```
+
+**Using variables**
+
+```php
+$name = 'World';
+echo "Hello, $name!";
+```
+
+**A simple function**
+
+```php
+function greet($name) {
+    return "Hello, $name!";
+}
+
+echo greet('World');
+```
