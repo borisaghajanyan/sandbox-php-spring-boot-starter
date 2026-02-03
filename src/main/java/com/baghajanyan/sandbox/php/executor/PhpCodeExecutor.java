@@ -46,14 +46,18 @@ public class PhpCodeExecutor implements CodeExecutor {
      * @return the result of the execution.
      */
     public ExecutionResult execute(CodeSnippet snippet) {
+        boolean acquired = false;
         try {
             semaphore.acquire();
+            acquired = true;
             return executeInDocker(snippet);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return new ExecutionResult(0, null, "Execution interrupted", Duration.ofMillis(EXECUTION_TIME_ZERO));
         } finally {
-            semaphore.release();
+            if (acquired) {
+                semaphore.release();
+            }
         }
     }
 

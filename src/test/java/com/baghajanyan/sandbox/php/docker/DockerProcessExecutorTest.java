@@ -27,6 +27,14 @@ public class DockerProcessExecutorTest {
         when(config.executionTimeout()).thenReturn(Duration.ofSeconds(1));
         when(config.maxMemoryMb()).thenReturn(128);
         when(config.maxCpuUnits()).thenReturn(1.0);
+        when(config.securityHardening()).thenReturn(true);
+        when(config.allowNetwork()).thenReturn(false);
+        when(config.readOnly()).thenReturn(true);
+        when(config.pidsLimit()).thenReturn(64);
+        when(config.runAsUser()).thenReturn("65534:65534");
+        when(config.tmpfsSize()).thenReturn("64m");
+        when(config.dropCapabilities()).thenReturn(true);
+        when(config.noNewPrivileges()).thenReturn(true);
         return config;
     }
 
@@ -96,6 +104,8 @@ public class DockerProcessExecutorTest {
             var ex = assertThrows(DockerProcessThreadException.class, () -> executor.execute(Path.of("/tmp/test.php")));
 
             assertTrue(ex.getCause() instanceof InterruptedException);
+            assertTrue(Thread.currentThread().isInterrupted());
         }
+        Thread.interrupted();
     }
 }

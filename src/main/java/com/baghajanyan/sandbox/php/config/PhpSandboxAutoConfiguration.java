@@ -42,8 +42,12 @@ public class PhpSandboxAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     private DockerConfig phpDockerConfig(PhpSandboxProperties sandboxProperties) {
+        var security = sandboxProperties.getSecurity();
         return new DockerConfig(sandboxProperties.getMaxMemoryMb(), sandboxProperties.getMaxCpuUnits(),
-                sandboxProperties.getMaxExecutionTime(), sandboxProperties.getDockerImage());
+                sandboxProperties.getMaxExecutionTime(), sandboxProperties.getDockerImage(),
+                security.isEnableHardening(), security.isAllowNetwork(), security.isReadOnly(),
+                security.getPidsLimit(), security.getRunAsUser(), security.getTmpfsSize(),
+                security.isDropCapabilities(), security.isNoNewPrivileges());
     }
 
     @Bean

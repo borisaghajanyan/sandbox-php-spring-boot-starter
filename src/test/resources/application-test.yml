@@ -5,6 +5,15 @@ sandboxcore:
     max-cpu-units: 0.5
     max-execution-time: 20s
     docker-image: php:8.3-cli-test
+    security:
+      enable-hardening: true
+      allow-network: false
+      read-only: true
+      pids-limit: 64
+      run-as-user: "65534:65534"
+      tmpfs-size: 64m
+      drop-capabilities: true
+      no-new-privileges: true
   filemanager:
     delete:
       max-retries: 3

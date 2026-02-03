@@ -39,6 +39,11 @@ public class PhpSandboxProperties {
      */
     private String dockerImage = "php:8.2-cli";
 
+    /**
+     * Security-related settings for the Docker sandbox.
+     */
+    private Security security = new Security();
+
     public int getMaxConcurrency() {
         return maxConcurrency;
     }
@@ -77,5 +82,119 @@ public class PhpSandboxProperties {
 
     public void setDockerImage(String dockerImage) {
         this.dockerImage = dockerImage;
+    }
+
+    public Security getSecurity() {
+        return security;
+    }
+
+    public void setSecurity(Security security) {
+        this.security = security;
+    }
+
+    public static class Security {
+        /**
+         * Enable hardened sandbox flags by default.
+         */
+        private boolean enableHardening = true;
+
+        /**
+         * Allow outbound/inbound network access.
+         */
+        private boolean allowNetwork = false;
+
+        /**
+         * Run the container with a read-only filesystem.
+         */
+        private boolean readOnly = true;
+
+        /**
+         * Limit the maximum number of processes inside the container.
+         */
+        private int pidsLimit = 64;
+
+        /**
+         * User and group to run as inside the container.
+         */
+        private String runAsUser = "65534:65534";
+
+        /**
+         * tmpfs size for /tmp (e.g., "64m").
+         */
+        private String tmpfsSize = "64m";
+
+        /**
+         * Drop all Linux capabilities.
+         */
+        private boolean dropCapabilities = true;
+
+        /**
+         * Prevent privilege escalation.
+         */
+        private boolean noNewPrivileges = true;
+
+        public boolean isEnableHardening() {
+            return enableHardening;
+        }
+
+        public void setEnableHardening(boolean enableHardening) {
+            this.enableHardening = enableHardening;
+        }
+
+        public boolean isAllowNetwork() {
+            return allowNetwork;
+        }
+
+        public void setAllowNetwork(boolean allowNetwork) {
+            this.allowNetwork = allowNetwork;
+        }
+
+        public boolean isReadOnly() {
+            return readOnly;
+        }
+
+        public void setReadOnly(boolean readOnly) {
+            this.readOnly = readOnly;
+        }
+
+        public int getPidsLimit() {
+            return pidsLimit;
+        }
+
+        public void setPidsLimit(int pidsLimit) {
+            this.pidsLimit = pidsLimit;
+        }
+
+        public String getRunAsUser() {
+            return runAsUser;
+        }
+
+        public void setRunAsUser(String runAsUser) {
+            this.runAsUser = runAsUser;
+        }
+
+        public String getTmpfsSize() {
+            return tmpfsSize;
+        }
+
+        public void setTmpfsSize(String tmpfsSize) {
+            this.tmpfsSize = tmpfsSize;
+        }
+
+        public boolean isDropCapabilities() {
+            return dropCapabilities;
+        }
+
+        public void setDropCapabilities(boolean dropCapabilities) {
+            this.dropCapabilities = dropCapabilities;
+        }
+
+        public boolean isNoNewPrivileges() {
+            return noNewPrivileges;
+        }
+
+        public void setNoNewPrivileges(boolean noNewPrivileges) {
+            this.noNewPrivileges = noNewPrivileges;
+        }
     }
 }

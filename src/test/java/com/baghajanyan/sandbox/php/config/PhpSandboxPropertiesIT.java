@@ -28,6 +28,14 @@ public class PhpSandboxPropertiesIT {
         assertEquals(0.5, phpSandboxProperties.getMaxCpuUnits());
         assertEquals(Duration.ofSeconds(20), phpSandboxProperties.getMaxExecutionTime());
         assertEquals("php:8.3-cli-test", phpSandboxProperties.getDockerImage());
+        assertEquals(true, phpSandboxProperties.getSecurity().isEnableHardening());
+        assertEquals(false, phpSandboxProperties.getSecurity().isAllowNetwork());
+        assertEquals(true, phpSandboxProperties.getSecurity().isReadOnly());
+        assertEquals(64, phpSandboxProperties.getSecurity().getPidsLimit());
+        assertEquals("65534:65534", phpSandboxProperties.getSecurity().getRunAsUser());
+        assertEquals("64m", phpSandboxProperties.getSecurity().getTmpfsSize());
+        assertEquals(true, phpSandboxProperties.getSecurity().isDropCapabilities());
+        assertEquals(true, phpSandboxProperties.getSecurity().isNoNewPrivileges());
     }
 
     @Test

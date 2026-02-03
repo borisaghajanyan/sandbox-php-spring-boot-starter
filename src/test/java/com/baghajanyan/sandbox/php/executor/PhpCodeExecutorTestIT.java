@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.util.concurrent.Semaphore;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.mockito.Mockito;
 
 import com.baghajanyan.sandbox.core.fs.DeleteConfig;
@@ -24,6 +25,7 @@ import com.baghajanyan.sandbox.php.docker.DockerProcessExecutor;
 import com.baghajanyan.sandbox.php.docker.DockerProcessException.DockerProcessThreadException;
 import com.baghajanyan.sandbox.php.docker.DockerProcessException.DockerProcessTimeoutException;
 
+@Tag("integration")
 class PhpCodeExecutorTestIT {
 
         TempFileManager fileManager = Mockito.spy(
@@ -32,7 +34,19 @@ class PhpCodeExecutorTestIT {
         Semaphore semaphore = new Semaphore(2, true);
         DockerProcessExecutor dockerProcess = Mockito
                         .spy(new DockerProcessExecutor(
-                                        new DockerConfig(6, 0.125, Duration.ofSeconds(5), "php:8.2-cli")));
+                                        new DockerConfig(
+                                                        6,
+                                                        0.125,
+                                                        Duration.ofSeconds(5),
+                                                        "php:8.2-cli",
+                                                        true,
+                                                        false,
+                                                        true,
+                                                        64,
+                                                        "65534:65534",
+                                                        "64m",
+                                                        true,
+                                                        true)));
 
         @Test
         void execute() {
@@ -140,5 +154,28 @@ class PhpCodeExecutorTestIT {
                                 () -> assertEquals(255, result.exitCode()),
                                 () -> assertTrue(result.executionTime().compareTo(Duration.ofMillis(2100)) < 0));
                 verify(fileManager).deleteAsync(any());
+        }
+
+        @Test
+        void execute_whenAcquireInterrupted_doesNotReleaseSemaphorePermit() {
+                Semaphore interruptingSemaphore = new Semaphore(0, true) {
+                        @Override
+                        public void acquire() throws InterruptedException {
+                                throw new InterruptedException("interrupted");
+                        }
+                };
+                var executor = new PhpCodeExecutor(interruptingSemaphore, fileManager, dockerProcess);
+                var snippet = new CodeSnippet("", Duration.ofSeconds(2), "php");
+
+                var result = executor.execute(snippet);
+
+                assertAll(
+                                () -> assertNull(result.stdout()),
+                                () -> assertEquals("Execution interrupted", result.stderr()),
+                                () -> assertEquals(0, result.exitCode()),
+                                () -> assertEquals(Duration.ofMillis(0), result.executionTime()),
+                                () -> assertEquals(0, interruptingSemaphore.availablePermits()));
+
+                Thread.interrupted();
         }
 }
