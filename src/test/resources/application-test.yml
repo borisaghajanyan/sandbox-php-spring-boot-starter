@@ -1,0 +1,13 @@
+# application-test.yml
+sandboxcore:
+  php:
+    max-concurrency: 10
+    max-memory-mb: 32
+    max-cpu-units: 0.5
+    max-execution-time: 20s
+    docker-image: php:8.3-cli-test
+  filemanager:
+    delete:
+      max-retries: 3
+      retry-delay: 50ms
+      termination-timeout: 200ms

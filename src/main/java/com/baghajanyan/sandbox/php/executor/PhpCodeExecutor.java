@@ -1,78 +1,119 @@
 package com.baghajanyan.sandbox.php.executor;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.concurrent.Semaphore;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.baghajanyan.sandbox.core.executor.CodeExecutor;
 import com.baghajanyan.sandbox.core.executor.ExecutionResult;
+import com.baghajanyan.sandbox.core.fs.TempFileManager;
 import com.baghajanyan.sandbox.core.model.CodeSnippet;
+import com.baghajanyan.sandbox.php.docker.DockerProcessExecutor;
+import com.baghajanyan.sandbox.php.docker.DockerProcessException.DockerProcessThreadException;
+import com.baghajanyan.sandbox.php.docker.DockerProcessException.DockerProcessTimeoutException;
 
+/**
+ * Executes a PHP code snippet in a sandboxed environment.
+ * <p>
+ * This class implements the {@link CodeExecutor} interface and is responsible
+ * for executing PHP code
+ * in a Docker container. It uses a {@link Semaphore} to control concurrent
+ * executions and a
+ * {@link TempFileManager} to manage temporary files.
+ */
 public class PhpCodeExecutor implements CodeExecutor {
 
-    private final Semaphore semaphore;
+    private static final long EXECUTION_TIME_ZERO = 0;
 
-    public PhpCodeExecutor(Semaphore semaphore) {
+    private final Semaphore semaphore;
+    private final TempFileManager fileManager;
+    private final DockerProcessExecutor process;
+
+    public PhpCodeExecutor(Semaphore semaphore, TempFileManager fileManager, DockerProcessExecutor process) {
         this.semaphore = semaphore;
+        this.fileManager = fileManager;
+        this.process = process;
     }
 
+    /**
+     * Executes the given code snippet.
+     *
+     * @param snippet the code snippet to execute.
+     * @return the result of the execution.
+     */
     public ExecutionResult execute(CodeSnippet snippet) {
         try {
             semaphore.acquire();
-            return runInDocker(snippet);
+            return executeInDocker(snippet);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return new ExecutionResult(0, null, "Execution interrupted");
+            return new ExecutionResult(0, null, "Execution interrupted", Duration.ofMillis(EXECUTION_TIME_ZERO));
         } finally {
             semaphore.release();
         }
     }
 
-    private ExecutionResult runInDocker(CodeSnippet snippet) {
+    private ExecutionResult executeInDocker(CodeSnippet snippet) {
         Path tmpFile = null;
 
         try {
-            tmpFile = Files.createTempFile("php-snippet-", ".php");
-            var phpCode = preparePhpCode(snippet.code());
-            Files.writeString(tmpFile, phpCode);
+            tmpFile = fileManager.createTempFile("php-snippet-" + System.nanoTime(), ".php");
+            String phpCode = preparePhpCode(snippet.code());
+            fileManager.write(tmpFile, phpCode);
 
-            var builder = new ProcessBuilder(
-                    "docker", "run", "--rm",
-                    "-m", "128m", "--cpus=0.5",
-                    "-v", tmpFile.getParent() + ":/code",
-                    "php:8.2-cli",
-                    "php", "-d", "display_errors=stderr",
-                    "-d", "error_reporting=E_ALL",
-                    "/code/" + tmpFile.getFileName());
-            var process = builder.start();
-            var stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            var stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            var dockerProcess = process.execute(tmpFile);
 
-            String out = stdout.lines().reduce("", (a, b) -> a + b + "\n").trim();
-            String err = stderr.lines().reduce("", (a, b) -> a + b + "\n").trim();
-
-            int exitCode = process.waitFor();
-
-            return new ExecutionResult(exitCode, out, err);
-        } catch (Exception e) {
-            return new ExecutionResult(0, null, "Failed to create temp file: " + e.getMessage());
+            return parseDockerExecutionResult(dockerProcess);
+        } catch (IOException e) {
+            return new ExecutionResult(0, null, "Failed to create/write temp file: " + e.getMessage(),
+                    Duration.ofMillis(EXECUTION_TIME_ZERO));
+        } catch (DockerProcessThreadException e) {
+            return new ExecutionResult(0, null, "Failed to handle docker process: " + e.getMessage(),
+                    Duration.ofMillis(EXECUTION_TIME_ZERO));
+        } catch (DockerProcessTimeoutException e) {
+            return new ExecutionResult(0, null, "Snippet execution timed out: " + e.getMessage(),
+                    Duration.ofMillis(EXECUTION_TIME_ZERO));
         } finally {
-            try {
-                if (tmpFile != null) {
-                    Files.deleteIfExists(tmpFile);
-                }
-            } catch (Exception e) {
-                // TODO: Handle cleanup exception
+            if (tmpFile != null) {
+                fileManager.deleteAsync(tmpFile);
             }
         }
     }
 
     private String preparePhpCode(String code) {
-        if (code.contains("<?php") || code.contains("<?")) {
-            return code;
-        }
-        return "<?php\n" + code + "\n";
+        // Remove any existing PHP tags to avoid syntax errors
+        String sanitizedCode = code.replaceAll("<\\?php|\\?>", "");
+
+        return "<?php\n" +
+                "$start = microtime(true);\n" +
+                sanitizedCode + "\n" +
+                "$end = microtime(true);\n" +
+                "fwrite(STDOUT, \"\\n__EXECUTION_TIME__: \" . (($end - $start) * 1000) . \"\\n\");\n" +
+                "?>";
     }
+
+    private ExecutionResult parseDockerExecutionResult(Process dockerProcess) {
+        int exitCode = dockerProcess.exitValue();
+        var stdout = new BufferedReader(new InputStreamReader(dockerProcess.getInputStream()));
+        var stderr = new BufferedReader(new InputStreamReader(dockerProcess.getErrorStream()));
+
+        String out = stdout.lines().reduce("", (a, b) -> a + b + "\n").trim();
+        String err = stderr.lines().reduce("", (a, b) -> a + b + "\n").trim();
+
+        long executionTime = 0;
+        Pattern pattern = Pattern.compile("__EXECUTION_TIME__:\\s*(\\d+(?:\\.\\d+)?)");
+        Matcher matcher = pattern.matcher(out);
+        if (matcher.find()) {
+            executionTime = (long) Double.parseDouble(matcher.group(1));
+            out = matcher.replaceAll("").trim();
+        }
+
+        return new ExecutionResult(exitCode, out, err, Duration.ofMillis(executionTime));
+    }
+
 }

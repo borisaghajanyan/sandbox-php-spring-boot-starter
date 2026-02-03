@@ -1,67 +1,71 @@
 # sandbox-php-spring-boot-starter
 
-A Spring Boot starter library that provides a secure PHP sandbox.
-It allows other Spring Boot services to execute PHP code snippets inside isolated Docker containers, with support for:
+Spring Boot starter for executing PHP code in a secure Docker sandbox, integrating sandbox-core library with auto-configuration and configurable concurrency.
 
-- Syntax validation
-- Capturing standard output and error
-- Limiting concurrent executions (max 5 containers by default)
-- Easy integration with your Spring Boot applications
+## Introduction
 
----
+The `sandbox-php-spring-boot-starter` provides a convenient way to integrate PHP code execution into your Spring Boot applications. It leverages Docker to create isolated and secure environments for running PHP scripts, preventing untrusted code from affecting your host system. This starter builds upon the `sandbox-core` library, offering seamless auto-configuration and easy customization of execution parameters.
 
 ## Features
 
-- **Secure**: Runs PHP snippets in Docker containers to prevent code from affecting the host.
-- **Language-specific starter**: Extends `sandbox-core` for PHP execution.
-- **Configurable**: The maximum number of concurrent executions can be customized.
-- **Lightweight**: Only depends on `sandbox-core` and Spring Boot testing libraries.
+*   **Secure Sandboxing:** Executes PHP code within isolated Docker containers.
+*   **Resource Management:** Configurable limits for CPU and memory usage for each PHP execution.
+*   **Concurrency Control:** Manages the number of simultaneous PHP executions to prevent system overload.
+*   **Execution Timeout:** Prevents long-running or infinite loops from consuming excessive resources.
+*   **Auto-configuration:** Seamless integration with Spring Boot's auto-configuration mechanism.
+*   **Temporary File Management:** Handles the creation and deletion of temporary PHP script files.
 
----
+## Getting Started
 
-## Installation
-
-Add this dependency to your `pom.xml`:
+To use this starter in your Spring Boot project, add the following Maven dependency to your `pom.xml`:
 
 ```xml
 <dependency>
     <groupId>com.baghajanyan</groupId>
     <artifactId>sandbox-php-spring-boot-starter</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version> <!-- Use the appropriate version -->
 </dependency>
 ```
 
----
+This starter also depends on the `sandbox-core` library for its core sandboxing functionalities.
 
 ## Configuration
 
-The following properties can be configured in your `application.properties` or `application.yml` file:
+You can customize the behavior of the PHP sandbox using properties in your `application.properties` or `application.yml` file. If no properties are explicitly set, the default values listed below will be used.
 
-| Property                          | Description                                  | Default Value |
-| --------------------------------- | -------------------------------------------- | ------------- |
-| `sandboxcore.php.max-concurrency` | The maximum number of concurrent executions. | `5`           |
+| Property                                     | Description                                                                     | Default Value        |
+| :------------------------------------------- | :------------------------------------------------------------------------------ | :------------------- |
+| `sandboxcore.php.max-concurrency`            | Maximum number of concurrent PHP executions.                                    | `5`                  |
+| `sandboxcore.php.max-memory-mb`              | Maximum memory (in MB) allocated to the Docker container for each execution.    | `16`                 |
+| `sandboxcore.php.max-cpu-units`              | Maximum CPU units allocated to the Docker container (e.g., `0.125` for 12.5% of one CPU). | `0.125`              |
+| `sandboxcore.php.max-execution-time`         | Maximum time allowed for a single PHP script execution (e.g., `15s`).           | `15s` (15 seconds)   |
+| `sandboxcore.php.docker-image`               | The Docker image to use for PHP execution.                                      | `php:8.2-cli`        |
+| `sandboxcore.filemanager.delete.max-retries` | Maximum retries for deleting temporary files.                                   | `5`                  |
+| `sandboxcore.filemanager.delete.retry-delay` | Delay between retry attempts for file deletion (e.g., `100ms`).                 | `100ms`              |
+| `sandboxcore.filemanager.delete.termination-timeout` | Timeout for forcibly terminating file deletion (e.g., `500ms`).                 | `500ms`              |
 
-### Example
+**Example `application.yml`:**
 
-Here's an example of how to configure the properties in your `application.properties` file:
-
-```properties
-sandboxcore.php.max-concurrency=10
+```yaml
+sandboxcore:
+  php:
+    max-concurrency: 10
+    max-memory-mb: 32
+    max-cpu-units: 0.5
+    max-execution-time: 20s
+    docker-image: php:8.3-cli
+  filemanager:
+    delete:
+      max-retries: 3
+      retry-delay: 50ms
+      termination-timeout: 200ms
 ```
-
----
 
 ## Usage
 
-To use the PHP code executor, inject the `CodeExecutor` bean into your Spring component and use its `execute` method.
-
-### Example
-
-Here's an example of a Spring service that uses the `CodeExecutor` to execute a PHP code snippet:
+Once configured, you can inject the `PhpCodeExecutor` bean into your Spring components and use it to execute PHP code.
 
 ```java
-package com.baghajanyan.sandbox.php.demo;
-
 import com.baghajanyan.sandbox.core.executor.CodeExecutor;
 import com.baghajanyan.sandbox.core.executor.ExecutionResult;
 import com.baghajanyan.sandbox.core.model.CodeSnippet;
@@ -76,44 +80,19 @@ public class PhpExecutionService {
         this.phpCodeExecutor = phpCodeExecutor;
     }
 
-    public ExecutionResult executePhpCode(String code) {
-        CodeSnippet snippet = new CodeSnippet(code);
-        return phpCodeExecutor.execute(snippet);
+    public String executePhpCode(String phpCode) {
+        CodeSnippet snippet = new CodeSnippet(phpCode);
+        ExecutionResult result = phpCodeExecutor.execute(snippet);
+
+        if (result.exitCode() == 0) {
+            return result.stdout();
+        } else {
+            return "Error (Exit Code: " + result.exitCode() + "):\n" + result.stderr();
+        }
     }
 }
 ```
 
-In this example:
+## License
 
-1.  The `CodeExecutor` bean is injected into the `PhpExecutionService`.
-2.  The `executePhpCode` method takes a string of PHP code, creates a `CodeSnippet` object, and passes it to the `execute` method of the `CodeExecutor`.
-3.  The `execute` method returns an `ExecutionResult` object, which contains the exit code, standard output, and standard error of the execution.
-
-### Code Examples
-
-The `code` parameter in the `executePhpCode` method can be any valid PHP code snippet. The library will automatically wrap the code in `<?php ... ?>` tags if they are not already present.
-
-Here are a few examples of valid code snippets:
-
-**A simple "Hello World"**
-
-```php
-echo 'Hello, World!';
-```
-
-**Using variables**
-
-```php
-$name = 'World';
-echo "Hello, $name!";
-```
-
-**A simple function**
-
-```php
-function greet($name) {
-    return "Hello, $name!";
-}
-
-echo greet('World');
-```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
