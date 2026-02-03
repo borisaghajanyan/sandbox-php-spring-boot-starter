@@ -1,4 +1,3 @@
-# application-test.yml
 sandboxcore:
   php:
     max-concurrency: 10

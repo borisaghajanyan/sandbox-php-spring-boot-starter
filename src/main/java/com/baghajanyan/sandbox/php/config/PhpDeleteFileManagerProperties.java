@@ -6,7 +6,7 @@ import java.time.Duration;
 
 /**
  * Configuration properties for the PHP delete file manager.
- * <p>
+ *
  * This class defines settings for managing the deletion of temporary files,
  * including retry mechanisms and timeout settings.
  */
@@ -17,10 +17,12 @@ public class PhpDeleteFileManagerProperties {
      * The maximum number of retries for deleting a file.
      */
     private int maxRetries = 5;
+
     /**
      * The delay between file deletion retries.
      */
     private Duration retryDelay = Duration.ofMillis(100);
+
     /**
      * The timeout for terminating the file deletion process.
      */

@@ -31,4 +31,3 @@ public class DockerProcessException extends RuntimeException {
         super(message);
     }
 }
-

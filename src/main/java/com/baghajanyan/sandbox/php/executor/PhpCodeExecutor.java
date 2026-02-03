@@ -19,12 +19,11 @@ import com.baghajanyan.sandbox.php.docker.DockerProcessException.DockerProcessTi
 
 /**
  * Executes a PHP code snippet in a sandboxed environment.
- * <p>
+ *
  * This class implements the {@link CodeExecutor} interface and is responsible
- * for executing PHP code
- * in a Docker container. It uses a {@link Semaphore} to control concurrent
- * executions and a
- * {@link TempFileManager} to manage temporary files.
+ * for executing PHP code in a Docker container. It uses a {@link Semaphore} to
+ * control concurrent executions and a {@link TempFileManager} to manage
+ * temporary files.
  */
 public class PhpCodeExecutor implements CodeExecutor {
 
@@ -43,7 +42,7 @@ public class PhpCodeExecutor implements CodeExecutor {
     /**
      * Executes the given code snippet.
      *
-     * @param snippet the code snippet to execute.
+     * @param snippet the PHP code snippet to execute.
      * @return the result of the execution.
      */
     public ExecutionResult execute(CodeSnippet snippet) {
@@ -87,7 +86,11 @@ public class PhpCodeExecutor implements CodeExecutor {
 
     private String preparePhpCode(String code) {
         // Remove any existing PHP tags to avoid syntax errors
-        String sanitizedCode = code.replaceAll("<\\?php|\\?>", "");
+        String sanitizedCode = code
+                // remove opening tag only if it's at the beginning (ignoring whitespace)
+                .replaceFirst("^\\s*<\\?php\\s*", "")
+                // remove closing tag only if it's at the end (ignoring whitespace)
+                .replaceFirst("\\s*\\?>\\s*$", "");
 
         return "<?php\n" +
                 "$start = microtime(true);\n" +

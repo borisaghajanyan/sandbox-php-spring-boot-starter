@@ -14,12 +14,10 @@ import com.baghajanyan.sandbox.php.executor.PhpCodeExecutor;
 
 /**
  * Auto-configuration for the PHP sandbox environment.
- * <p>
+ *
  * This class sets up the necessary beans for running PHP code in a sandboxed
- * environment,
- * including beans for managing temporary files, controlling concurrent
- * executions,
- * and configuring the Docker container.
+ * environment, including beans for managing temporary files, controlling
+ * concurrent executions, and configuring the Docker container.
  */
 @AutoConfiguration
 @EnableConfigurationProperties({ PhpSandboxProperties.class, PhpDeleteFileManagerProperties.class })

@@ -6,10 +6,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Configuration properties for the PHP sandbox.
- * <p>
- * This class defines settings for the sandboxed execution of PHP code, including
- * concurrency limits,
- * resource allocation (memory and CPU), and execution timeouts.
+ *
+ * This class defines settings for the sandboxed execution of PHP code,
+ * including concurrency limits, resource allocation (memory and CPU), and
+ * execution timeouts.
  */
 @ConfigurationProperties(prefix = "sandboxcore.php")
 public class PhpSandboxProperties {
@@ -18,18 +18,22 @@ public class PhpSandboxProperties {
      * The maximum number of concurrent PHP executions.
      */
     private int maxConcurrency = 5;
+
     /**
      * The maximum memory in megabytes allocated to the PHP container.
      */
     private int maxMemoryMb = 16;
+
     /**
      * The maximum CPU units allocated to the PHP container.
      */
     private double maxCpuUnits = 0.125;
+
     /**
      * The maximum time allowed for a single PHP execution.
      */
     private Duration maxExecutionTime = Duration.ofMillis(15000);
+
     /**
      * The Docker image to use for the PHP sandbox.
      */
@@ -66,7 +70,6 @@ public class PhpSandboxProperties {
     public void setMaxCpuUnits(double maxCpuUnits) {
         this.maxCpuUnits = maxCpuUnits;
     }
-
 
     public String getDockerImage() {
         return dockerImage;

@@ -9,12 +9,11 @@ import com.baghajanyan.sandbox.php.docker.DockerProcessException.DockerProcessTh
 import com.baghajanyan.sandbox.php.docker.DockerProcessException.DockerProcessTimeoutException;
 
 /**
- * Executes a PHP script in a sandboxed Docker container.
- * <p>
+ * Executes a script from a file in a sandboxed Docker container.
+ *
  * This class is responsible for creating and running a Docker process with
- * specified resource limits
- * and execution timeouts. It uses a {@link DockerConfig} object to configure the
- * container.
+ * specified resource limits and execution timeouts. It uses a
+ * {@link DockerConfig} object to configure the container.
  */
 public class DockerProcessExecutor {
     private final DockerConfig dockerConfig;
@@ -24,9 +23,9 @@ public class DockerProcessExecutor {
     }
 
     /**
-     * Executes the PHP script in a Docker container.
+     * Executes the script from a temporary file in a Docker container.
      *
-     * @param tmpFile the temporary file containing the PHP script to execute.
+     * @param tmpFile the temporary file containing the script to execute.
      * @return the completed {@link Process} object.
      * @throws DockerProcessThreadException  if the Docker process fails to start or
      *                                       is interrupted.
@@ -51,7 +50,8 @@ public class DockerProcessExecutor {
 
     private ProcessBuilder create(Path tmpFile) {
         return new ProcessBuilder("docker", "run", "--rm", "-m", dockerConfig.maxMemoryMb() + "m",
-                "--cpus=" + dockerConfig.maxCpuUnits(), "-v", tmpFile.getParent() + ":/code", dockerConfig.dockerImage(),
+                "--cpus=" + dockerConfig.maxCpuUnits(), "-v", tmpFile.getParent() + ":/code",
+                dockerConfig.dockerImage(),
                 "php",
                 "-d", "display_errors=stderr", "-d", "error_reporting=E_ALL", "/code/" + tmpFile.getFileName());
     }
