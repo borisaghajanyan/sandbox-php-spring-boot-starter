@@ -1,6 +1,6 @@
 # sandbox-php-spring-boot-starter
 
-Spring Boot starter for executing PHP code in a secure Docker sandbox, integrating sandbox-core library with auto-configuration and configurable concurrency.
+Spring Boot starter for executing PHP code in a secure Docker sandbox, integrating [sandbox-core](https://github.com/borisaghajanyan/sandbox-core) library with auto-configuration and configurable concurrency.
 
 ## Introduction
 
