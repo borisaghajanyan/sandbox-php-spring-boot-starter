@@ -36,7 +36,7 @@ You can also consume this starter via JitPack. Add the repository and dependency
 <dependency>
     <groupId>com.github.borisaghajanyan</groupId>
     <artifactId>sandbox-php-spring-boot-starter</artifactId>
-    <version>{TAG_OR_COMMIT}</version>
+    <version>{TAG}</version>
 </dependency>
 ```
 
