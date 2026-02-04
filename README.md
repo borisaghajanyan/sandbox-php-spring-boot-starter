@@ -29,7 +29,7 @@ To use this starter in your Spring Boot project, add the following Maven depende
 
 ## Configuration
 
-You can customize the behavior of the PHP sandbox using properties in your `application.properties` or `application.yml` file. If no properties are explicitly set, the default values listed below will be used.
+You can customize the behavior of the PHP sandbox using properties in your `application.properties` or `application.yml` file. The executor writes each snippet to a temporary file and runs it inside Docker, so the file deletion settings control cleanup of those temporary files after execution. If no properties are explicitly set, the default values listed below will be used.
 
 | Property                                             | Description                                                                               | Default Value      |
 | :--------------------------------------------------- | :---------------------------------------------------------------------------------------- | :----------------- |
@@ -38,9 +38,19 @@ You can customize the behavior of the PHP sandbox using properties in your `appl
 | `sandboxcore.php.max-cpu-units`                      | Maximum CPU units allocated to the Docker container (e.g., `0.125` for 12.5% of one CPU). | `0.125`            |
 | `sandboxcore.php.max-execution-time`                 | Maximum time allowed for a single PHP script execution (e.g., `15s`).                     | `15s` (15 seconds) |
 | `sandboxcore.php.docker-image`                       | The Docker image to use for PHP execution.                                                | `php:8.2-cli`      |
+| `sandboxcore.php.security.enable-hardening`          | Enable hardened Docker sandbox flags.                                                     | `true`             |
+| `sandboxcore.php.security.allow-network`             | Allow network access for the container.                                                   | `false`            |
+| `sandboxcore.php.security.read-only`                 | Run the container with a read-only filesystem.                                             | `true`             |
+| `sandboxcore.php.security.pids-limit`                | Max processes allowed inside the container.                                                | `64`               |
+| `sandboxcore.php.security.run-as-user`               | User/group to run as inside the container.                                                 | `65534:65534`      |
+| `sandboxcore.php.security.tmpfs-size`                | Size of tmpfs mounted at `/tmp`.                                                           | `64m`              |
+| `sandboxcore.php.security.drop-capabilities`         | Drop all Linux capabilities.                                                               | `true`             |
+| `sandboxcore.php.security.no-new-privileges`         | Prevent privilege escalation inside the container.                                         | `true`             |
 | `sandboxcore.filemanager.delete.max-retries`         | Maximum retries for deleting temporary files.                                             | `5`                |
 | `sandboxcore.filemanager.delete.retry-delay`         | Delay between retry attempts for file deletion (e.g., `100ms`).                           | `100ms`            |
 | `sandboxcore.filemanager.delete.termination-timeout` | Timeout for forcibly terminating file deletion (e.g., `500ms`).                           | `500ms`            |
+
+Note: snippets are written to temporary files before execution in Docker, so these deletion settings control cleanup.
 
 **Example `application.yml`:**
 
@@ -52,6 +62,15 @@ sandboxcore:
     max-cpu-units: 0.5
     max-execution-time: 20s
     docker-image: php:8.3-cli
+    security:
+      enable-hardening: true
+      allow-network: false
+      read-only: true
+      pids-limit: 64
+      run-as-user: "65534:65534"
+      tmpfs-size: 64m
+      drop-capabilities: true
+      no-new-privileges: true
   filemanager:
     delete:
       max-retries: 3

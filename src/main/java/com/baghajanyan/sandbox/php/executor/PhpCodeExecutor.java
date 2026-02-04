@@ -9,6 +9,9 @@ import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.baghajanyan.sandbox.core.executor.CodeExecutor;
 import com.baghajanyan.sandbox.core.executor.ExecutionResult;
 import com.baghajanyan.sandbox.core.fs.TempFileManager;
@@ -29,6 +32,7 @@ public class PhpCodeExecutor implements CodeExecutor {
 
     private static final long EXECUTION_TIME_ZERO = 0;
     private static final int EXCEPTION_EXIT_CODE = -1;
+    private static final Logger logger = LoggerFactory.getLogger(PhpCodeExecutor.class);
 
     private final Semaphore semaphore;
     private final TempFileManager fileManager;
@@ -54,6 +58,7 @@ public class PhpCodeExecutor implements CodeExecutor {
             return executeInDocker(snippet);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            logger.warn("Execution interrupted while waiting for permit", e);
             return new ExecutionResult(EXCEPTION_EXIT_CODE, null, "Execution interrupted",
                     Duration.ofMillis(EXECUTION_TIME_ZERO));
         } finally {
@@ -75,12 +80,15 @@ public class PhpCodeExecutor implements CodeExecutor {
 
             return parseDockerExecutionResult(dockerProcess);
         } catch (IOException e) {
+            logger.error("Failed to create/write temp file for PHP snippet", e);
             return new ExecutionResult(EXCEPTION_EXIT_CODE, null, "Failed to create/write temp file: " + e.getMessage(),
                     Duration.ofMillis(EXECUTION_TIME_ZERO));
         } catch (DockerProcessThreadException e) {
+            logger.error("Docker process failed while executing PHP snippet", e);
             return new ExecutionResult(EXCEPTION_EXIT_CODE, null, "Failed to handle docker process: " + e.getMessage(),
                     Duration.ofMillis(EXECUTION_TIME_ZERO));
         } catch (DockerProcessTimeoutException e) {
+            logger.warn("PHP snippet execution timed out", e);
             return new ExecutionResult(EXCEPTION_EXIT_CODE, null, "Snippet execution timed out: " + e.getMessage(),
                     Duration.ofMillis(EXECUTION_TIME_ZERO));
         } finally {

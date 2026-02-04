@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.baghajanyan.sandbox.php.config.DockerConfig;
 import com.baghajanyan.sandbox.php.docker.DockerProcessException.DockerProcessThreadException;
 import com.baghajanyan.sandbox.php.docker.DockerProcessException.DockerProcessTimeoutException;
@@ -18,6 +21,7 @@ import com.baghajanyan.sandbox.php.docker.DockerProcessException.DockerProcessTi
  * {@link DockerConfig} object to configure the container.
  */
 public class DockerProcessExecutor {
+    private static final Logger logger = LoggerFactory.getLogger(DockerProcessExecutor.class);
     private final DockerConfig dockerConfig;
 
     public DockerProcessExecutor(DockerConfig dockerConfig) {
@@ -41,6 +45,8 @@ public class DockerProcessExecutor {
 
             if (!finished) {
                 process.destroyForcibly();
+                logger.warn("Docker process timed out after {} seconds",
+                        dockerConfig.executionTimeout().toSeconds());
                 throw new DockerProcessTimeoutException(
                         "Execution timed out after " + dockerConfig.executionTimeout().toSeconds() + " seconds");
             }
@@ -49,6 +55,7 @@ public class DockerProcessExecutor {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
+            logger.error("Failed to execute Docker process", e);
             throw new DockerProcessThreadException("Failed to execute Docker process", e);
         }
     }
