@@ -28,6 +28,7 @@ import com.baghajanyan.sandbox.php.docker.DockerProcessException.DockerProcessTi
 public class PhpCodeExecutor implements CodeExecutor {
 
     private static final long EXECUTION_TIME_ZERO = 0;
+    private static final int EXCEPTION_EXIT_CODE = -1;
 
     private final Semaphore semaphore;
     private final TempFileManager fileManager;
@@ -53,7 +54,8 @@ public class PhpCodeExecutor implements CodeExecutor {
             return executeInDocker(snippet);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return new ExecutionResult(0, null, "Execution interrupted", Duration.ofMillis(EXECUTION_TIME_ZERO));
+            return new ExecutionResult(EXCEPTION_EXIT_CODE, null, "Execution interrupted",
+                    Duration.ofMillis(EXECUTION_TIME_ZERO));
         } finally {
             if (acquired) {
                 semaphore.release();
@@ -73,13 +75,13 @@ public class PhpCodeExecutor implements CodeExecutor {
 
             return parseDockerExecutionResult(dockerProcess);
         } catch (IOException e) {
-            return new ExecutionResult(0, null, "Failed to create/write temp file: " + e.getMessage(),
+            return new ExecutionResult(EXCEPTION_EXIT_CODE, null, "Failed to create/write temp file: " + e.getMessage(),
                     Duration.ofMillis(EXECUTION_TIME_ZERO));
         } catch (DockerProcessThreadException e) {
-            return new ExecutionResult(0, null, "Failed to handle docker process: " + e.getMessage(),
+            return new ExecutionResult(EXCEPTION_EXIT_CODE, null, "Failed to handle docker process: " + e.getMessage(),
                     Duration.ofMillis(EXECUTION_TIME_ZERO));
         } catch (DockerProcessTimeoutException e) {
-            return new ExecutionResult(0, null, "Snippet execution timed out: " + e.getMessage(),
+            return new ExecutionResult(EXCEPTION_EXIT_CODE, null, "Snippet execution timed out: " + e.getMessage(),
                     Duration.ofMillis(EXECUTION_TIME_ZERO));
         } finally {
             if (tmpFile != null) {

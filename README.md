@@ -29,8 +29,6 @@ To use this starter in your Spring Boot project, add the following Maven depende
 
 ## Configuration
 
-## Configuration
-
 You can customize the behavior of the PHP sandbox using properties in your `application.properties` or `application.yml` file. If no properties are explicitly set, the default values listed below will be used.
 
 | Property                                             | Description                                                                               | Default Value      |
@@ -103,7 +101,7 @@ public class PhpExecutionService {
         ExecutionResult result = phpCodeExecutor.execute(snippet);
 
         // Analyze the execution result
-        if (result.exitCode() == 0) {
+        if (result.exitCode() == 0 && (result.stderr() == null || result.stderr().isBlank())) {
             System.out.println("PHP Output: \n" + result.stdout());
             System.out.println("Execution Time: " + result.executionTime().toMillis() + " ms");
             return result.stdout();
