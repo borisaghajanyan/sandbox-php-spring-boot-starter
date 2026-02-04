@@ -19,15 +19,24 @@ The `sandbox-php-spring-boot-starter` provides a convenient way to integrate PHP
 - **Auto-configuration:** Seamless integration with Spring Boot's auto-configuration mechanism.
 - **Temporary File Management:** Handles the creation and deletion of temporary PHP script files.
 
-## Getting Started
+## JitPack
 
-To use this starter in your Spring Boot project, add the following Maven dependency to your `pom.xml`:
+You can also consume this starter via JitPack. Add the repository and dependency below.
+
+```xml
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+```
 
 ```xml
 <dependency>
-    <groupId>com.baghajanyan</groupId>
+    <groupId>com.github.borisaghajanyan</groupId>
     <artifactId>sandbox-php-spring-boot-starter</artifactId>
-    <version>0.0.1-SNAPSHOT</version> <!-- Use the appropriate version -->
+    <version>{TAG_OR_COMMIT}</version>
 </dependency>
 ```
 
@@ -108,6 +117,7 @@ echo "My name is " . $name;
 import com.baghajanyan.sandbox.core.executor.CodeExecutor;
 import com.baghajanyan.sandbox.core.executor.ExecutionResult;
 import com.baghajanyan.sandbox.core.model.CodeSnippet;
+import java.time.Duration;
 import org.springframework.stereotype.Service;
 
 @Service

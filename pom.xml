@@ -8,9 +8,9 @@
 		<version>4.0.1</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>io.github.borisaghajanyan</groupId>
+	<groupId>com.github.borisaghajanyan</groupId>
 	<artifactId>sandbox-php-spring-boot-starter</artifactId>
-	<version>1.0.0</version>
+	<version>v1.0.0</version>
 	<name>sandbox-php-spring-boot-starter</name>
 	<description>Spring Boot starter for executing PHP code in a secure Docker sandbox, integrating sandbox-core library with auto-configuration and configurable concurrency.</description>
 	<url>https://github.com/borisaghajanyan/sandbox-php-spring-boot-starter</url>
@@ -38,11 +38,17 @@
 		<developerConnection>scm:git:ssh://git@github.com/borisaghajanyan/sandbox-php-spring-boot-starter.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
+	<repositories>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+	</repositories>
 	<dependencies>
 		<dependency>
-			<groupId>io.github.borisaghajanyan</groupId>
+			<groupId>com.github.borisaghajanyan</groupId>
 			<artifactId>sandbox-core</artifactId>
-			<version>1.0.0</version>
+			<version>v1.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -101,16 +107,6 @@
 			</plugin>
 		</plugins>
 	</build>
-	<distributionManagement>
-		<snapshotRepository>
-			<id>ossrh</id>
-			<url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
-		</snapshotRepository>
-		<repository>
-			<id>ossrh</id>
-			<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-		</repository>
-	</distributionManagement>
 	<profiles>
 		<profile>
 			<id>integration-tests</id>
