@@ -17,6 +17,8 @@ The `sandbox-php-spring-boot-starter` provides a convenient way to integrate PHP
 
 ## Getting Started
 
+This starter requires **Java 21**.
+
 To use this starter in your Spring Boot project, add the following Maven dependency to your `pom.xml`:
 
 ```xml
