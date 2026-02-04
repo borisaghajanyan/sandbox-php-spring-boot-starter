@@ -2,6 +2,10 @@
 
 Spring Boot starter for executing PHP code in a secure, isolated Docker sandbox, integrating [sandbox-core](https://github.com/borisaghajanyan/sandbox-core) library with auto-configuration and configurable concurrency.
 
+## Requirements
+
+- Java 21
+
 ## Introduction
 
 The `sandbox-php-spring-boot-starter` provides a convenient way to integrate PHP code execution into your Spring Boot applications. It leverages Docker to create secure, isolated environments for running PHP scripts. This starter builds upon the [sandbox-core](https://github.com/borisaghajanyan/sandbox-core) library, offering seamless auto-configuration and easy customization of execution parameters.
@@ -16,8 +20,6 @@ The `sandbox-php-spring-boot-starter` provides a convenient way to integrate PHP
 - **Temporary File Management:** Handles the creation and deletion of temporary PHP script files.
 
 ## Getting Started
-
-This starter requires **Java 21**.
 
 To use this starter in your Spring Boot project, add the following Maven dependency to your `pom.xml`:
 
@@ -42,12 +44,12 @@ You can customize the behavior of the PHP sandbox using properties in your `appl
 | `sandboxcore.php.docker-image`                       | The Docker image to use for PHP execution.                                                | `php:8.2-cli`      |
 | `sandboxcore.php.security.enable-hardening`          | Enable hardened Docker sandbox flags.                                                     | `true`             |
 | `sandboxcore.php.security.allow-network`             | Allow network access for the container.                                                   | `false`            |
-| `sandboxcore.php.security.read-only`                 | Run the container with a read-only filesystem.                                             | `true`             |
-| `sandboxcore.php.security.pids-limit`                | Max processes allowed inside the container.                                                | `64`               |
-| `sandboxcore.php.security.run-as-user`               | User/group to run as inside the container.                                                 | `65534:65534`      |
-| `sandboxcore.php.security.tmpfs-size`                | Size of tmpfs mounted at `/tmp`.                                                           | `64m`              |
-| `sandboxcore.php.security.drop-capabilities`         | Drop all Linux capabilities.                                                               | `true`             |
-| `sandboxcore.php.security.no-new-privileges`         | Prevent privilege escalation inside the container.                                         | `true`             |
+| `sandboxcore.php.security.read-only`                 | Run the container with a read-only filesystem.                                            | `true`             |
+| `sandboxcore.php.security.pids-limit`                | Max processes allowed inside the container.                                               | `64`               |
+| `sandboxcore.php.security.run-as-user`               | User/group to run as inside the container.                                                | `65534:65534`      |
+| `sandboxcore.php.security.tmpfs-size`                | Size of tmpfs mounted at `/tmp`.                                                          | `64m`              |
+| `sandboxcore.php.security.drop-capabilities`         | Drop all Linux capabilities.                                                              | `true`             |
+| `sandboxcore.php.security.no-new-privileges`         | Prevent privilege escalation inside the container.                                        | `true`             |
 | `sandboxcore.filemanager.delete.max-retries`         | Maximum retries for deleting temporary files.                                             | `5`                |
 | `sandboxcore.filemanager.delete.retry-delay`         | Delay between retry attempts for file deletion (e.g., `100ms`).                           | `100ms`            |
 | `sandboxcore.filemanager.delete.termination-timeout` | Timeout for forcibly terminating file deletion (e.g., `500ms`).                           | `500ms`            |
