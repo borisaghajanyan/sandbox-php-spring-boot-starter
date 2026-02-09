@@ -178,4 +178,16 @@ class PhpCodeExecutorTestIT {
 
                 Thread.interrupted();
         }
+
+        @Test
+        void execute_whenTimeoutProvided_timesOut() throws Exception {
+                var executor = new PhpCodeExecutor(semaphore, fileManager, dockerProcess);
+                var snippet = new CodeSnippet("$i = 0; while (true) { $i++; }", Duration.ofSeconds(1), "php");
+
+                var result = executor.execute(snippet);
+
+                assertAll(
+                                () -> assertEquals(124, result.exitCode()),
+                                () -> assertTrue(result.stderr().contains("Maximum execution time exceeded")));
+        }
 }

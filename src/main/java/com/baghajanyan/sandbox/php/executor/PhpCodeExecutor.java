@@ -73,7 +73,7 @@ public class PhpCodeExecutor implements CodeExecutor {
 
         try {
             tmpFile = fileManager.createTempFile("php-snippet-" + System.nanoTime(), ".php");
-            String phpCode = preparePhpCode(snippet.code());
+            String phpCode = preparePhpCode(snippet.code(), snippet.timeout());
             fileManager.write(tmpFile, phpCode);
 
             var dockerProcess = process.execute(tmpFile);
@@ -98,7 +98,7 @@ public class PhpCodeExecutor implements CodeExecutor {
         }
     }
 
-    private String preparePhpCode(String code) {
+    private String preparePhpCode(String code, Duration timeout) {
         // Remove any existing PHP tags to avoid syntax errors
         String sanitizedCode = code
                 // remove opening tag only if it's at the beginning (ignoring whitespace)
@@ -106,7 +106,23 @@ public class PhpCodeExecutor implements CodeExecutor {
                 // remove closing tag only if it's at the end (ignoring whitespace)
                 .replaceFirst("\\s*\\?>\\s*$", "");
 
+        String timeoutGuard = "";
+        if (timeout != null && !timeout.isZero() && !timeout.isNegative()) {
+            long seconds = Math.max(1, (long) Math.ceil(timeout.toMillis() / 1000.0));
+            timeoutGuard = "declare(ticks=1);\n" +
+                    "$__timeout_ms = " + timeout.toMillis() + ";\n" +
+                    "$__timeout_start = microtime(true);\n" +
+                    "register_tick_function(function() use (&$__timeout_start, $__timeout_ms) {\n" +
+                    "    if ((microtime(true) - $__timeout_start) * 1000 > $__timeout_ms) {\n" +
+                    "        fwrite(STDERR, \"Maximum execution time exceeded\");\n" +
+                    "        exit(124);\n" +
+                    "    }\n" +
+                    "});\n" +
+                    "set_time_limit(" + seconds + ");\n";
+        }
+
         return "<?php\n" +
+                timeoutGuard +
                 "$start = microtime(true);\n" +
                 sanitizedCode + "\n" +
                 "$end = microtime(true);\n" +
