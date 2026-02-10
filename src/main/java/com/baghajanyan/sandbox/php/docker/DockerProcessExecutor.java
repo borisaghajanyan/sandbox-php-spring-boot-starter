@@ -85,10 +85,10 @@ public class DockerProcessExecutor {
                 command.add("--security-opt");
                 command.add("no-new-privileges");
             }
-            if (!dockerConfig.runAsUser().isBlank()) {
-                command.add("--user");
-                command.add(dockerConfig.runAsUser());
-            }
+        }
+        if (!dockerConfig.runAsUser().isBlank()) {
+            command.add("--user");
+            command.add(dockerConfig.runAsUser());
         }
 
         command.add("-m");
