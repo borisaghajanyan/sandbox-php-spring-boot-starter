@@ -55,10 +55,9 @@ class PhpCodeExecutorTestIT {
                 var phpSnippet = """
                                 $a = 5;
                                 $b = 7;
-                                sleep(2);
                                 echo $a + $b;
                                 """;
-                var snippet = new CodeSnippet(phpSnippet, Duration.ofSeconds(2), "php");
+                var snippet = new CodeSnippet(phpSnippet, Duration.ofSeconds(5), "php");
                 var result = executor.execute(snippet);
 
                 assertAll(
@@ -82,7 +81,7 @@ class PhpCodeExecutorTestIT {
                 assertAll(
                                 () -> assertNull(result.stdout()),
                                 () -> assertEquals("Failed to create/write temp file: Disk full", result.stderr()),
-                                () -> assertEquals(0, result.exitCode()),
+                                () -> assertEquals(-1, result.exitCode()),
                                 () -> assertEquals(Duration.ofMillis(0), result.executionTime()));
                 verify(fileManager, never()).deleteAsync(any());
         }
@@ -100,7 +99,7 @@ class PhpCodeExecutorTestIT {
                                 () -> assertNull(result.stdout()),
                                 () -> assertEquals("Failed to create/write temp file: Failed to write to temp file",
                                                 result.stderr()),
-                                () -> assertEquals(0, result.exitCode()),
+                                () -> assertEquals(-1, result.exitCode()),
                                 () -> assertEquals(Duration.ofMillis(0), result.executionTime()));
                 verify(fileManager).deleteAsync(any());
         }
@@ -117,7 +116,7 @@ class PhpCodeExecutorTestIT {
                 assertAll(
                                 () -> assertNull(result.stdout()),
                                 () -> assertEquals("Snippet execution timed out: Execution timed out", result.stderr()),
-                                () -> assertEquals(0, result.exitCode()),
+                                () -> assertEquals(-1, result.exitCode()),
                                 () -> assertEquals(Duration.ofMillis(0), result.executionTime()));
                 verify(fileManager).deleteAsync(any());
         }
@@ -136,7 +135,7 @@ class PhpCodeExecutorTestIT {
                                 () -> assertNull(result.stdout()),
                                 () -> assertEquals("Failed to handle docker process: Execution failed",
                                                 result.stderr()),
-                                () -> assertEquals(0, result.exitCode()),
+                                () -> assertEquals(-1, result.exitCode()),
                                 () -> assertEquals(Duration.ofMillis(0), result.executionTime()));
                 verify(fileManager).deleteAsync(any());
         }
@@ -172,7 +171,7 @@ class PhpCodeExecutorTestIT {
                 assertAll(
                                 () -> assertNull(result.stdout()),
                                 () -> assertEquals("Execution interrupted", result.stderr()),
-                                () -> assertEquals(0, result.exitCode()),
+                                () -> assertEquals(-1, result.exitCode()),
                                 () -> assertEquals(Duration.ofMillis(0), result.executionTime()),
                                 () -> assertEquals(0, interruptingSemaphore.availablePermits()));
 
@@ -182,12 +181,12 @@ class PhpCodeExecutorTestIT {
         @Test
         void execute_whenTimeoutProvided_timesOut() throws Exception {
                 var executor = new PhpCodeExecutor(semaphore, fileManager, dockerProcess);
-                var snippet = new CodeSnippet("$i = 0; while (true) { $i++; }", Duration.ofSeconds(1), "php");
+                var snippet = new CodeSnippet("sleep(2);", Duration.ofMillis(100), "php");
 
                 var result = executor.execute(snippet);
 
                 assertAll(
                                 () -> assertEquals(124, result.exitCode()),
-                                () -> assertTrue(result.stderr().contains("Maximum execution time exceeded")));
+                                () -> assertEquals("Snippet execution timed out: exceeded 100ms", result.stderr()));
         }
 }

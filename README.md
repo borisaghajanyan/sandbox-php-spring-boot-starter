@@ -162,6 +162,7 @@ The `execute` method returns an `ExecutionResult` object, which provides the fol
 - The PHP snippet is written via `TempFileManager` (typically under the system temp directory). If Docker Desktop uses a non-default sharing configuration, ensure the temp directory is shared.
 - If Docker cannot read the PHP file from the host, execution may fail with an empty output and a non-zero exit code. This usually means the temp directory is not shared with Docker.
 - Resources are cleaned up after each run: the temp PHP file is deleted asynchronously and the Docker container runs with `--rm` so it is removed on exit.
+- Timeout enforcement is based on the execution time reported by the PHP runner.
 - When `sandboxcore.php.security.enable-hardening` is set to `false`, other security flags (`allow-network`, `read-only`, `pids-limit`, `drop-capabilities`, `no-new-privileges`) are ignored. The `run-as-user` setting is still applied.
 
 ## Troubleshooting

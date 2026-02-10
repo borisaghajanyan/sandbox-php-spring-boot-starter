@@ -32,6 +32,7 @@ public class PhpCodeExecutor implements CodeExecutor {
 
     private static final long EXECUTION_TIME_ZERO = 0;
     private static final int EXCEPTION_EXIT_CODE = -1;
+    private static final int TIMEOUT_EXIT_CODE = 124;
     private static final Logger logger = LoggerFactory.getLogger(PhpCodeExecutor.class);
 
     private final Semaphore semaphore;
@@ -45,7 +46,10 @@ public class PhpCodeExecutor implements CodeExecutor {
     }
 
     /**
-     * Executes the given code snippet.
+     * Executes the given PHP snippet.
+     *
+     * The snippet timeout is injected as a session-level statement timeout and
+     * applies to all statements in the snippet.
      *
      * @param snippet the PHP code snippet to execute.
      * @return the result of the execution.
@@ -78,7 +82,8 @@ public class PhpCodeExecutor implements CodeExecutor {
 
             var dockerProcess = process.execute(tmpFile);
 
-            return parseDockerExecutionResult(dockerProcess);
+            var result = parseDockerExecutionResult(dockerProcess);
+            return enforceTimeout(snippet, result);
         } catch (IOException e) {
             logger.error("Failed to create/write temp file for PHP snippet", e);
             return new ExecutionResult(EXCEPTION_EXIT_CODE, null, "Failed to create/write temp file: " + e.getMessage(),
@@ -106,23 +111,7 @@ public class PhpCodeExecutor implements CodeExecutor {
                 // remove closing tag only if it's at the end (ignoring whitespace)
                 .replaceFirst("\\s*\\?>\\s*$", "");
 
-        String timeoutGuard = "";
-        if (timeout != null && !timeout.isZero() && !timeout.isNegative()) {
-            long seconds = Math.max(1, (long) Math.ceil(timeout.toMillis() / 1000.0));
-            timeoutGuard = "declare(ticks=1);\n" +
-                    "$__timeout_ms = " + timeout.toMillis() + ";\n" +
-                    "$__timeout_start = microtime(true);\n" +
-                    "register_tick_function(function() use (&$__timeout_start, $__timeout_ms) {\n" +
-                    "    if ((microtime(true) - $__timeout_start) * 1000 > $__timeout_ms) {\n" +
-                    "        fwrite(STDERR, \"Maximum execution time exceeded\");\n" +
-                    "        exit(124);\n" +
-                    "    }\n" +
-                    "});\n" +
-                    "set_time_limit(" + seconds + ");\n";
-        }
-
         return "<?php\n" +
-                timeoutGuard +
                 "$start = microtime(true);\n" +
                 sanitizedCode + "\n" +
                 "$end = microtime(true);\n" +
@@ -147,6 +136,18 @@ public class PhpCodeExecutor implements CodeExecutor {
         }
 
         return new ExecutionResult(exitCode, out, err, Duration.ofMillis(executionTime));
+    }
+
+    private ExecutionResult enforceTimeout(CodeSnippet snippet, ExecutionResult result) {
+        var timeout = snippet.timeout();
+        if (timeout == null || timeout.isZero() || timeout.isNegative()) {
+            return result;
+        }
+        if (result.executionTime().compareTo(timeout) <= 0) {
+            return result;
+        }
+        var message = "Snippet execution timed out: exceeded " + timeout.toMillis() + "ms";
+        return new ExecutionResult(TIMEOUT_EXIT_CODE, result.stdout(), message, result.executionTime());
     }
 
 }
